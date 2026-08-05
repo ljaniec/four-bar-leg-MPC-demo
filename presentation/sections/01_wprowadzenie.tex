@@ -1,0 +1,166 @@
+% 1
+\begin{frame}[plain]
+  \titlepage
+  \vspace{-1.2em}
+  \begin{center}
+  \small Dla odbiorców inżynierskich: jasno, ale bez ukrywania modelu, ograniczeń i ryzyk.
+  \end{center}
+  \note{Slajd ustawia cel prezentacji: nie jest to gotowa obietnica produktu, tylko początek projektu badawczego nad sterowaniem predykcyjnym i bezpieczeństwem lokomocji.}
+\end{frame}
+
+% 2
+\begin{frame}{Cel projektu w jednym obrazie}
+\begin{columns}[T,onlytextwidth]
+\column{0.56\textwidth}
+\begin{itemize}
+  \item Mamy czworonożnego robota z nietypową nogą opartą o mechanizm czworoboku.
+  \item Obecne sterowanie oparte na \key{Reinforcement Learning}, czyli uczeniu przez wzmacnianie, działa w wielu próbach.
+  \item Problem: polityka może wprowadzić robota w konfiguracje trudne do odzyskania na realnym podłożu.
+  \item Hipoteza projektu: \key{model + predykcja + bariery bezpieczeństwa} mogą zmniejszyć liczbę takich awarii.
+\end{itemize}
+\column{0.40\textwidth}
+\begin{center}
+\begin{tikzpicture}[scale=0.88,>=Latex]
+  \draw[thick,rounded corners=3pt,fill=blue!8] (-1.7,0.25) rectangle (1.7,1.05);
+  \node[font=\small] at (0,0.65) {korpus robota};
+  \foreach \x/\d in {-1.25/-1,-0.45/1,0.45/-1,1.25/1} {
+    \draw[very thick] (\x,0.25)--(\x+0.25*\d,-0.65)--(\x+0.55*\d,-1.35);
+    \fill[safe] (\x+0.55*\d,-1.40) circle (0.07);
+  }
+  \draw[->,thick,pwrblue] (-1.9,1.4)--(1.9,1.4);
+  \node[font=\scriptsize] at (0,1.65) {ruch korpusu i harmonogram kontaktów};
+  \draw[rounded corners=2pt,fill=softgray] (-1.55,-2.2) rectangle (1.55,-1.7);
+  \node[font=\scriptsize,align=center] at (0,-1.95) {RL proponuje ruch\\MPC i CBF kontrolują ryzyko};
+\end{tikzpicture}
+\end{center}
+\end{columns}
+\source{Opis platformy z załączonego streszczenia KKR: cztery kończyny, 3 stopnie swobody na kończynę, ROS 2, CAN, tryby sterowania napędów.}
+\note{Należy wyjaśnić, że projekt nie neguje uczenia przez wzmacnianie. Chodzi o dodanie warstwy modelowej i bezpieczeństwa tam, gdzie czysta polityka uczona nie ma jawnych gwarancji.}
+\end{frame}
+
+% 3
+\begin{frame}{Platforma: co wiemy z dokumentacji}
+\begin{columns}[T,onlytextwidth]
+\column{0.54\textwidth}
+\begin{itemize}
+  \item Korpus aluminiowy i cztery kończyny.
+  \item Każda kończyna: \key{trzy stopnie swobody}.
+  \item Główna część nogi: mechanizm czworoboku przegubowego / równoległoboku.
+  \item Napędy: silniki bezszczotkowe prądu stałego z przekładniami planetarnymi.
+  \item Sterowanie z komputera przez \key{Robot Operating System 2 (ROS 2)} i \key{Controller Area Network (CAN)}.
+\end{itemize}
+\column{0.42\textwidth}
+\begin{center}
+\begin{tikzpicture}[scale=0.72]
+  \node[font=\scriptsize] at (0,2.25) {widok z góry};
+  \draw[thick,rounded corners=2pt,fill=blue!7] (-1.4,1.35) rectangle (1.4,1.95);
+  \foreach \x in {-1.1,1.1} {\foreach \y in {1.25,2.05} {\draw[thick] (\x,\y)--(\x+0.25,\y+0.22);}}
+
+  \node[font=\scriptsize] at (0,0.75) {widok z przodu};
+  \draw[thick,fill=blue!7] (-1.2,0.1) rectangle (1.2,0.55);
+  \draw[thick] (-0.85,0.1)--(-1.25,-0.85)--(-1.55,-1.35);
+  \draw[thick] (0.85,0.1)--(1.25,-0.85)--(1.55,-1.35);
+
+  \node[font=\scriptsize] at (0,-1.75) {widok z boku};
+  \draw[thick,fill=blue!7] (-1.4,-2.55) rectangle (1.4,-2.15);
+  \draw[thick] (-0.95,-2.55)--(-0.55,-3.15)--(-0.35,-3.55);
+  \draw[thick] (0.95,-2.55)--(0.55,-3.15)--(0.35,-3.55);
+\end{tikzpicture}
+\end{center}
+\end{columns}
+{\vspace{0.15em}\tiny\color{black!55}Źródło: załączony PDF, s. 1-2. Pełne dane CAD, bezwładności i ograniczenia momentu wymagają uzupełnienia.}
+\note{Tu trzeba wyraźnie odróżnić fakty z PDF-a od przyszłych założeń modelowych. Dokładny model wymaga CAD-u, danych silników, przekładni i identyfikacji.}
+\end{frame}
+
+% 4
+\begin{frame}{Dlaczego to nie jest „zwykły manipulator na nogach”?}
+\begin{columns}[T,onlytextwidth]
+\column{0.52\textwidth}
+\begin{itemize}
+  \item Robot kroczący zmienia punkty kontaktu z podłożem.
+  \item Kontakt może się pojawić, zniknąć, poślizgnąć albo uderzyć w podłoże.
+  \item Tarcie i nierówności podłoża są częścią sterowania, nie tylko zakłóceniem.
+  \item Błąd jednej nogi może zmienić równowagę całego korpusu.
+\end{itemize}
+\column{0.44\textwidth}
+\begin{block}{Konsekwencja dla sterowania}
+Sterownik musi planować ruch, siły i bezpieczeństwo konfiguracji, a nie tylko śledzić zadaną trajektorię przegubów.
+\end{block}
+\vspace{0.5em}
+\begin{center}
+\begin{tikzpicture}[scale=0.9]
+  \draw[thick,rounded corners=2pt,fill=blue!6] (-1.5,0.2) rectangle (1.5,0.8);
+  \foreach \x/\s in {-1.2/1, -0.45/0, 0.45/1, 1.2/0} {
+    \draw[thick] (\x,0.2) -- (\x-0.25,-0.8);
+    \draw[thick] (\x,0.2) -- (\x+0.25,-0.8);
+    \ifnum\s=1 \fill[safe] (\x,-0.85) circle (0.08); \else \draw[warn,thick] (\x,-0.85) circle (0.08); \fi
+  }
+  \draw[black!40,thick] (-2,-0.95) -- (2,-0.95);
+  \node[align=center,font=\scriptsize] at (0,-1.35) {kontakt aktywny / noga w przenoszeniu};
+\end{tikzpicture}
+\end{center}
+\end{columns}
+\note{To dobry slajd dla laików: kontakt i podłoże są aktywnymi elementami układu. W sterowaniu manipulatorów zwykle mamy stałą podstawę, a tutaj podstawa musi być utrzymywana przez same nogi.}
+\end{frame}
+
+% 5
+\begin{frame}{Obecny punkt startowy: uczenie przez wzmacnianie}
+\small
+\begin{columns}[T,onlytextwidth]
+\column{0.49\textwidth}
+\begin{block}{Reinforcement Learning (RL)}
+Polityka sterowania uczona przez próby i nagrody w symulacji lub na robocie.
+\end{block}
+\begin{itemize}
+  \item Znajduje złożone zachowania bez ręcznego programowania każdego kroku.
+  \item Po treningu działa szybko.
+  \item Bezpieczeństwo bywa zapisane tylko pośrednio w funkcji nagrody.
+\end{itemize}
+\column{0.47\textwidth}
+\begin{center}
+\begin{tikzpicture}[node distance=0.65cm,>=Latex]
+  \tikzstyle{box}=[draw,rounded corners=2pt,fill=blue!6,minimum width=3.0cm,minimum height=0.72cm,align=center,font=\small]
+  \node[box] (obs) {obserwacje\\czujników};
+  \node[box,below=of obs] (policy) {polityka RL};
+  \node[box,below=of policy] (cmd) {zadane pozycje\\lub momenty};
+  \node[box,below=of cmd] (robot) {robot + podłoże};
+  \draw[->,thick] (obs) -- (policy);
+  \draw[->,thick] (policy) -- (cmd);
+  \draw[->,thick] (cmd) -- (robot);
+  \draw[->,thick] (robot.west) .. controls +(-1.0,0) and +(-1.0,0) .. (obs.west);
+\end{tikzpicture}
+\end{center}
+\end{columns}
+\note{Należy podkreślić, że RL jest mocnym punktem startowym. Problemem nie jest brak ruchu, tylko brak jawnego mechanizmu wykluczania stanów niebezpiecznych lub nieodzyskiwalnych.}
+\end{frame}
+
+% 6
+\begin{frame}{Awaria, która motywuje projekt}
+\begin{columns}[T,onlytextwidth]
+\column{0.52\textwidth}
+\begin{itemize}
+  \item Przykład: nogi ustawiają się zbyt szeroko na boki.
+  \item Na szorstkim podłożu stopa nie przesuwa się łatwo do środka.
+  \item Napęd może mieć za mały zapas momentu, aby odzyskać postawę.
+  \item Polityka działała lokalnie sensownie, ale weszła w obszar o złej geometrii i złym kontakcie.
+\end{itemize}
+\column{0.44\textwidth}
+\begin{block}{Nie chodzi tylko o „lepszy trening”}
+Potrzebujemy wykryć i opisać zbiór konfiguracji, do których sterownik nie powinien dopuszczać.
+\end{block}
+\vspace{0.2em}
+\begin{center}
+\begin{tikzpicture}[scale=0.82]
+ \draw[thick,fill=blue!5] (-1.1,0.3) rectangle (1.1,0.75);
+ \foreach \x/\dx in {-0.8/-0.85,0.8/0.85} {
+   \draw[ultra thick] (\x,0.3)--(\x+\dx,-0.75);
+   \draw[ultra thick] (\x+\dx,-0.75)--(\x+1.25*\dx,-1.35);
+   \fill[warn] (\x+1.25*\dx,-1.40) circle (0.08);
+ }
+ \draw[black!40,thick] (-2.3,-1.5)--(2.3,-1.5);
+ \node[font=\scriptsize,align=center] at (0,-1.85) {duży rozstaw + tarcie = trudny powrót};
+\end{tikzpicture}
+\end{center}
+\end{columns}
+\note{Slajd ma przełożyć intuicję użytkownika na problem sterowania: niepożądana konfiguracja może wynikać z połączenia geometrii, tarcia, momentu i braku planowania odzysku.}
+\end{frame}
