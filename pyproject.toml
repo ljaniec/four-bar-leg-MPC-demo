@@ -4,13 +4,19 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "four-bar-leg-mpc-demo"
-version = "0.1.0"
-description = "Kinematic constrained-MPC demo for one four-bar quadruped leg."
+version = "0.1.1"
+description = "Constrained kinematic MPC demo for Cartesian foot set-point regulation on one four-bar quadruped leg."
 readme = "README.md"
 requires-python = ">=3.10"
 license = {file = "LICENSE"}
 authors = [{name = "Lukasz Janiec"}]
-keywords = ["robotics", "quadruped", "model-predictive-control", "four-bar-linkage"]
+keywords = [
+  "robotics",
+  "quadruped",
+  "model-predictive-control",
+  "set-point-regulation",
+  "four-bar-linkage",
+]
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Intended Audience :: Education",
