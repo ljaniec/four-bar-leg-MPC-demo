@@ -45,9 +45,29 @@ The demonstration uses the discrete-time model
 q[k+1] = q[k] + dt * u[k]
 ```
 
-where `u[k]` contains the three active joint velocities. The finite-horizon objective penalizes:
+where `u[k]` contains the three active joint velocities.
 
-1. foot-position tracking error;
+### Reference semantics
+
+The implemented controller performs **constrained Cartesian foot set-point regulation**:
+
+```text
+p_foot[k] -> p_foot_star
+```
+
+`p_foot_star` is one constant Cartesian point. It is computed once from `q_nominal` before the simulation and is passed unchanged to every MPC solve.
+
+This distinction is deliberate:
+
+- **set-point regulation** uses one constant reference point;
+- **trajectory tracking** would use a time-indexed reference `p_ref[k]` and penalize timing error;
+- **path following** would use a geometric curve `p_path[s]` and a progress variable `s` that may evolve independently of time.
+
+The finite-horizon point sequences returned by the optimizer are predicted motions. The recorded closed-loop point sequence is the executed motion history. Neither is a desired path or a desired trajectory.
+
+The finite-horizon objective penalizes:
+
+1. Cartesian foot set-point error;
 2. deviation from a nominal recoverable posture;
 3. joint velocity;
 4. changes in joint velocity.
@@ -68,9 +88,11 @@ The margins are explicit and inspectable, but they are still heuristics. They ar
 
 A sensible progression is:
 
-1. kinematic one-leg MPC, as implemented here;
-2. torque-level one-leg dynamics and parameter identification;
-3. contact/friction constraints and barrier functions;
-4. a centroidal or Single Rigid Body model for the quadruped;
-5. a Whole-Body Control layer mapping body/contact plans to joint commands;
-6. integration with the existing reinforcement-learning policy as a proposal layer or residual controller.
+1. kinematic one-leg Cartesian set-point regulation, as implemented here;
+2. time-indexed swing-foot trajectory tracking as a separate extension;
+3. geometric path following with an explicit progress variable, if required;
+4. torque-level one-leg dynamics and parameter identification;
+5. contact/friction constraints and barrier functions;
+6. a centroidal or Single Rigid Body model for the quadruped;
+7. a Whole-Body Control layer mapping body/contact plans to joint commands;
+8. integration with the existing reinforcement-learning policy as a proposal layer or residual controller.
