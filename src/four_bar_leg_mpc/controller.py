@@ -1,4 +1,4 @@
-"""Kinematic Model Predictive Control for one four-bar leg."""
+"""Kinematic set-point MPC for one four-bar leg."""
 
 from __future__ import annotations
 
@@ -16,23 +16,37 @@ FloatArray = NDArray[np.float64]
 
 @dataclass(frozen=True)
 class MPCParameters:
-    """Numerical settings and cost weights for the demonstration controller."""
+    """Numerical settings and cost weights for Cartesian foot set-point regulation."""
 
     dt: float = 0.08
     horizon: int = 8
     velocity_limit: FloatArray = field(
         default_factory=lambda: np.array([1.20, 1.20, 1.50], dtype=float)
     )
-    foot_tracking_weight: float = 800.0
+    foot_setpoint_weight: float = 800.0
     posture_weight: float = 0.40
     velocity_weight: float = 0.03
     velocity_change_weight: float = 0.20
-    terminal_foot_weight: float = 2000.0
+    terminal_foot_setpoint_weight: float = 2000.0
     max_iterations: int = 60
     tolerance: float = 1e-5
 
 
 DEFAULT_MPC_PARAMETERS = MPCParameters()
+
+
+def _vector3(name: str, value: FloatArray) -> FloatArray:
+    """Return a finite three-vector or reject trajectory-shaped inputs."""
+    vector = np.asarray(value, dtype=float)
+    if vector.shape != (3,):
+        raise ValueError(
+            f"{name} must be one Cartesian or joint-space vector with shape (3,), "
+            f"received {vector.shape}. This controller does not accept a time-indexed "
+            "reference trajectory."
+        )
+    if not np.all(np.isfinite(vector)):
+        raise ValueError(f"{name} must contain finite values.")
+    return vector
 
 
 def rollout(
@@ -41,41 +55,47 @@ def rollout(
     mpc_parameters: MPCParameters = DEFAULT_MPC_PARAMETERS,
 ) -> FloatArray:
     """Roll out ``q[k+1] = q[k] + dt * u[k]`` over the prediction horizon."""
-    q = np.asarray(q0, dtype=float).copy()
-    if q.shape != (3,):
-        raise ValueError(f"q0 must have shape (3,), received {q.shape}.")
-
+    q = _vector3("q0", q0).copy()
     controls = np.asarray(controls, dtype=float).reshape(mpc_parameters.horizon, 3)
-    trajectory = [q.copy()]
+    state_prediction = [q.copy()]
     for velocity in controls:
         q = q + mpc_parameters.dt * velocity
-        trajectory.append(q.copy())
-    return np.asarray(trajectory, dtype=float)
+        state_prediction.append(q.copy())
+    return np.asarray(state_prediction, dtype=float)
 
 
 def objective(
     control_flat: FloatArray,
     q0: FloatArray,
-    foot_target: FloatArray,
+    foot_setpoint: FloatArray,
     q_nominal: FloatArray,
     previous_velocity: FloatArray,
     leg_parameters: LegParameters = DEFAULT_LEG_PARAMETERS,
     mpc_parameters: MPCParameters = DEFAULT_MPC_PARAMETERS,
 ) -> float:
-    """Evaluate the finite-horizon tracking, posture, and smoothness cost."""
+    """Evaluate set-point error, posture, effort, and smoothness over the horizon.
+
+    ``foot_setpoint`` is one constant Cartesian reference point for the complete
+    optimization horizon. This demonstration does not accept a time-indexed
+    reference trajectory and therefore is not a trajectory-tracking controller.
+    """
+    foot_setpoint = _vector3("foot_setpoint", foot_setpoint)
+    q_nominal = _vector3("q_nominal", q_nominal)
+    previous = _vector3("previous_velocity", previous_velocity)
     controls = np.asarray(control_flat, dtype=float).reshape(mpc_parameters.horizon, 3)
     q_prediction = rollout(q0, controls, mpc_parameters)
 
     cost = 0.0
-    previous = np.asarray(previous_velocity, dtype=float)
     for index in range(mpc_parameters.horizon):
         q_next = q_prediction[index + 1]
-        foot_error = foot_position(q_next, leg_parameters) - foot_target
+        foot_setpoint_error = foot_position(q_next, leg_parameters) - foot_setpoint
         posture_error = q_next - q_nominal
         velocity = controls[index]
         velocity_change = velocity - previous
 
-        cost += mpc_parameters.foot_tracking_weight * float(foot_error @ foot_error)
+        cost += mpc_parameters.foot_setpoint_weight * float(
+            foot_setpoint_error @ foot_setpoint_error
+        )
         cost += mpc_parameters.posture_weight * float(posture_error @ posture_error)
         cost += mpc_parameters.velocity_weight * float(velocity @ velocity)
         cost += mpc_parameters.velocity_change_weight * float(
@@ -83,9 +103,11 @@ def objective(
         )
         previous = velocity
 
-    terminal_error = foot_position(q_prediction[-1], leg_parameters) - foot_target
-    cost += mpc_parameters.terminal_foot_weight * float(
-        terminal_error @ terminal_error
+    terminal_setpoint_error = (
+        foot_position(q_prediction[-1], leg_parameters) - foot_setpoint
+    )
+    cost += mpc_parameters.terminal_foot_setpoint_weight * float(
+        terminal_setpoint_error @ terminal_setpoint_error
     )
     return float(cost)
 
@@ -115,7 +137,7 @@ def constraint_residuals(
 
 def solve_mpc(
     q: FloatArray,
-    foot_target: FloatArray,
+    foot_setpoint: FloatArray,
     q_nominal: FloatArray,
     warm_start: FloatArray | None = None,
     previous_velocity: FloatArray | None = None,
@@ -123,17 +145,25 @@ def solve_mpc(
     safety_parameters: SafetyParameters = DEFAULT_SAFETY_PARAMETERS,
     mpc_parameters: MPCParameters = DEFAULT_MPC_PARAMETERS,
 ) -> tuple[FloatArray, FloatArray]:
-    """Solve one constrained MPC problem and return first/all controls."""
-    q = np.asarray(q, dtype=float)
-    foot_target = np.asarray(foot_target, dtype=float)
-    q_nominal = np.asarray(q_nominal, dtype=float)
+    """Solve one constrained Cartesian set-point regulation problem.
+
+    The returned horizon is a predicted motion generated by the optimizer. It is
+    not a desired path or a time-parameterized reference trajectory.
+    """
+    q = _vector3("q", q)
+    foot_setpoint = _vector3("foot_setpoint", foot_setpoint)
+    q_nominal = _vector3("q_nominal", q_nominal)
     if warm_start is None:
         warm_start = np.zeros((mpc_parameters.horizon, 3), dtype=float)
     if previous_velocity is None:
         previous_velocity = np.zeros(3, dtype=float)
+    previous_velocity = _vector3("previous_velocity", previous_velocity)
 
     bounds = [
-        (-float(mpc_parameters.velocity_limit[j]), float(mpc_parameters.velocity_limit[j]))
+        (
+            -float(mpc_parameters.velocity_limit[j]),
+            float(mpc_parameters.velocity_limit[j]),
+        )
         for _ in range(mpc_parameters.horizon)
         for j in range(3)
     ]
@@ -143,9 +173,9 @@ def solve_mpc(
         np.asarray(warm_start, dtype=float).reshape(-1),
         args=(
             q,
-            foot_target,
+            foot_setpoint,
             q_nominal,
-            np.asarray(previous_velocity, dtype=float),
+            previous_velocity,
             leg_parameters,
             mpc_parameters,
         ),

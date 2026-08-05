@@ -1,4 +1,4 @@
-"""Command-line interface for the four-bar leg MPC demo."""
+"""Command-line interface for the four-bar leg MPC set-point demo."""
 
 from __future__ import annotations
 
@@ -14,8 +14,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="four-bar-leg-mpc-demo",
         description=(
-            "Run the kinematic MPC demonstration for one four-bar quadruped leg "
-            "and generate figures."
+            "Run constrained kinematic MPC for point-to-point Cartesian foot "
+            "set-point regulation and generate figures."
         ),
     )
     parser.add_argument(
@@ -55,8 +55,9 @@ def main(argv: list[str] | None = None) -> int:
         steps=args.steps,
         include_animation=not args.no_animation,
     )
-    final_error = float(np.linalg.norm(result.foot[-1] - result.target))
+    final_error = float(np.linalg.norm(result.foot[-1] - result.foot_setpoint))
     print(f"Outputs written to: {args.output_dir.resolve()}")
-    print(f"Final foot-position error: {final_error:.6f} m")
+    print(f"Final Cartesian foot set-point error: {final_error:.6f} m")
     print(f"Final joint configuration: {result.q[-1]}")
+    print("Reference type: one fixed Cartesian foot set-point (not a path or trajectory).")
     return 0

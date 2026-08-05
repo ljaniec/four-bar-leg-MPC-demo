@@ -85,8 +85,8 @@ h    = model.safety_margins(q, dq)
 repeat at control rate:
     measure state x
     predict with model f
-    reject infeasible plans
-    minimize tracking + effort + risk
+    reject infeasible motions
+    minimize set-point error + effort + risk
     apply only control u_0
 \end{lstlisting}
 \column{0.41\textwidth}
@@ -97,7 +97,7 @@ repeat at control rate:
   }
   \draw[->,thick,pwrblue] (0,0)--(3.2,0);
   \draw[thick,warn] (0,0.35)--(3.1,0.35);
-  \node[font=\scriptsize] at (1.55,0.68) {predykcja};
+  \node[font=\scriptsize] at (1.55,0.68) {predykcja ruchu};
   \draw[->,very thick,safe] (0,-0.35)--(0.62,-0.35);
   \node[font=\scriptsize,align=center] at (1.45,-0.68) {wykonujemy tylko\\pierwszy krok};
 \end{tikzpicture}
@@ -107,13 +107,13 @@ repeat at control rate:
   \item Ograniczenia są częścią zadania, nie dopiskiem po fakcie.
 \end{itemize}
 \end{columns}
-\note{Dla laików najważniejsza jest intuicja: MPC nie układa pełnej trasy raz na zawsze. Cały czas planuje krótki horyzont i wykonuje pierwszy element planu.}
+\note{Dla laików najważniejsza jest intuicja: MPC nie układa pełnego ruchu raz na zawsze. W tym demonstratorze stale rozwiązuje problem dojścia do jednego stałego punktu zadanego.}
 \end{frame}
 
 % 17
-\begin{frame}{Najprostszy demonstrator MPC dla jednej nogi}
+\begin{frame}{Demonstrator: regulacja położenia stopy do stałego punktu}
 \begin{columns}[T,onlytextwidth]
-\column{0.46\textwidth}
+\column{0.47\textwidth}
 \begin{block}{Model kinematyczny użyty w kodzie}
 \[
 x_k=q_k,\qquad u_k=\dot q_k,
@@ -123,39 +123,42 @@ q_{k+1}=q_k+\Delta t\,u_k.
 \]
 \end{block}
 \begin{itemize}
-  \item Cel: przesunąć stopę do zadanego punktu.
+  \item Cel: doprowadzić stopę do jednego stałego punktu $p_F^\star$.
   \item Ograniczenia: kąty, prędkości, rozstaw boczny i odległość od przełączenia czworoboku.
 \end{itemize}
-\column{0.50\textwidth}
-\includegraphics[width=\linewidth,height=0.55\textheight,keepaspectratio]{figures/mpc_leg_trajectory.png}
+\begin{alertblock}{Precyzyjna klasyfikacja}
+To jest \textbf{regulacja punkt--punkt}. Nie jest to śledzenie trajektorii ani śledzenie ścieżki.
+\end{alertblock}
+\column{0.49\textwidth}
+\includegraphics[width=\linewidth,height=0.55\textheight,keepaspectratio]{figures/mpc_foot_setpoint_regulation.png}
 \end{columns}
-\note{Należy uczciwie powiedzieć, że demonstrator steruje prędkościami przegubów. Model momentowy pojawia się dopiero jako następny etap projektu i w appendixie.}
+\note{Linia na rysunku jest historią ruchu wygenerowanego przez regulator. Nie jest referencją. Punkt zadany jest stały przez całą symulację.}
 \end{frame}
 
 % 18
-\begin{frame}{Funkcja kosztu i stan demonstratora}
+\begin{frame}{Funkcja kosztu i znaczenie referencji}
 \begin{columns}[T,onlytextwidth]
-\column{0.52\textwidth}
+\column{0.53\textwidth}
 \small
 \[
 \begin{aligned}
-J ={}& w_p\|p_F-p_F^{\mathrm{ref}}\|^2
+J ={}& w_p\|p_F-p_F^\star\|^2
  + w_q\|q-q_{\mathrm{nom}}\|^2\\
 &+ w_u\|\dot q\|^2
  + w_{\Delta u}\|\Delta\dot q\|^2.
 \end{aligned}
 \]
 \begin{itemize}
-  \item $w_p$: dokładność położenia stopy.
+  \item $p_F^\star$ jest jednym, niezmiennym punktem zadanym.
+  \item $w_p$: redukcja uchybu położenia stopy względem $p_F^\star$.
   \item $w_q$: preferowana, odzyskiwalna postawa.
-  \item $w_u$: umiarkowane prędkości napędów.
-  \item $w_{\Delta u}$: płynne zmiany sterowania.
+  \item $w_u$, $w_{\Delta u}$: umiarkowane i płynne sterowanie.
 \end{itemize}
-\column{0.44\textwidth}
-\includegraphics[width=\linewidth,height=0.50\textheight,keepaspectratio]{figures/mpc_joint_states.png}
+\column{0.43\textwidth}
+\includegraphics[width=\linewidth,height=0.47\textheight,keepaspectratio]{figures/mpc_joint_states.png}
 \end{columns}
-\begin{block}{Następny poziom}
-Po identyfikacji dynamiki wejście $u=\dot q$ można zastąpić momentem $u=\tau$.
+\begin{block}{Czego nie ma w tym przykładzie?}
+Nie ma sekwencji $p_F^{\mathrm{ref}}(k)$ zależnej od czasu ani krzywej $p_F^{\mathrm{path}}(s)$. To byłyby odpowiednio: śledzenie trajektorii i śledzenie ścieżki.
 \end{block}
-\note{Ten slajd usuwa niespójność między kodem a wcześniejszą wersją prezentacji, która opisywała od razu regulator momentowy.}
+\note{Ten slajd ma zamknąć spór terminologiczny. Przewidywany ruch w horyzoncie jest wynikiem optymalizacji, a nie zadaną trajektorią.}
 \end{frame}

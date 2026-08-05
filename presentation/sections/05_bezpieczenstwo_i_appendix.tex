@@ -154,14 +154,18 @@ Ten slajd jest dobry do dyskusji technicznej, ale nie jest potrzebny każdemu od
   \item \href{https://arxiv.org/abs/2503.04613}{Whole-Body MPC z MuJoCo} - współczesny przykład MPC całego ciała dla czworonogów i humanoidów.
 \end{itemize}
 \vspace{-0.25em}
-\begin{block}{Pełniejsza formulacja jednej nogi}
+\begin{block}{Pełniejsza formulacja obecnej regulacji do punktu}
 \[
 \min \sum_k \left(
-\|p_F-p_F^{ref}\|^2 + \|q-q_{nom}\|^2 + \|\tau\|^2\right)
+\|p_F-p_F^\star\|^2 + \|q-q_{\mathrm{nom}}\|^2 + \|\tau\|^2\right),
+\qquad p_F^\star=\mathrm{const}.
 \]
 \[
-\Phi(q,z)=0,\quad q_{min}\le q\le q_{max},\quad |\tau|\le\tau_{max},\quad h(q,\dot q)\ge0.
+\Phi(q,z)=0,\quad q_{\min}\le q\le q_{\max},\quad |\tau|\le\tau_{\max},\quad h(q,\dot q)\ge0.
 \]
 \end{block}
-\note{To jest slajd kończący i jednocześnie źródła. Każdy materiał ma jedno zdanie opisu, tak jak użytkownik poprosił. Dyad jest świadomie pominięty ze względu na komercyjną licencję, a może być wspomniany ustnie.}
+\begin{alertblock}{Rozszerzenia są osobnymi zadaniami}
+Śledzenie trajektorii wymaga $p_F^{\mathrm{ref}}(k)$, a śledzenie ścieżki wymaga krzywej $p_F^{\mathrm{path}}(s)$ i zmiennej postępu $s$.
+\end{alertblock}
+\note{To jest slajd kończący i jednocześnie źródła. Symbol $p_F^\star$ jednoznacznie oznacza stały punkt zadany. Dyad jest świadomie pominięty ze względu na komercyjną licencję, a może być wspomniany ustnie.}
 \end{frame}

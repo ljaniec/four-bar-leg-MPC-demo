@@ -1,4 +1,4 @@
-"""Kinematic MPC demonstration for one four-bar quadruped leg."""
+"""Constrained kinematic MPC for one-leg Cartesian foot set-point regulation."""
 
 from .controller import MPCParameters, solve_mpc
 from .geometry import LegParameters, foot_position, leg_points, passive_joint_angles
@@ -19,4 +19,4 @@ __all__ = [
     "solve_mpc",
 ]
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
