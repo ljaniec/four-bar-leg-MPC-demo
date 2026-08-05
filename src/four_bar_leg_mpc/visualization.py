@@ -1,4 +1,4 @@
-"""Static and animated visualizations for the four-bar leg demo."""
+"""Static and animated visualizations for the four-bar leg set-point demo."""
 
 from __future__ import annotations
 
@@ -29,9 +29,9 @@ _LABELS: dict[Language, dict[str, str]] = {
         "hip": "Motor 1: hip motion inward and outward",
         "sweep": "Motor 2: rotation of the complete planar leg",
         "extend": "Motor 3: four-bar actuation and effective leg extension",
-        "trajectory": "Kinematic MPC: one-leg motion to a target",
-        "foot_path": "foot path",
-        "target": "target",
+        "setpoint_title": "Kinematic MPC: Cartesian foot set-point regulation",
+        "motion_history": "closed-loop foot motion (result, not a reference path)",
+        "setpoint": "fixed Cartesian set-point",
         "states": "System state: three actuated coordinates",
         "time": "time [s]",
         "angle": "angle [rad]",
@@ -40,9 +40,9 @@ _LABELS: dict[Language, dict[str, str]] = {
         "q_extend": "q_extend: effective extension",
         "margins": "Constraint margins: positive values are feasible",
         "margin_value": "margin value",
-        "prediction": "predicted foot path",
-        "executed": "executed path",
-        "animation": "One-leg MPC: mechanism state and prediction",
+        "prediction": "predicted motion over the MPC horizon",
+        "executed": "closed-loop motion history",
+        "animation": "Foot set-point regulation: state and MPC prediction",
         "minimum_margin": "minimum margin",
         "side_view": "Motor 3: short-link rotation changes foot position and effective length",
         "plane_coordinate": "mechanism-plane coordinate [m]",
@@ -61,9 +61,9 @@ _LABELS: dict[Language, dict[str, str]] = {
         "hip": "Silnik 1: ruch biodra do wewnątrz i na zewnątrz",
         "sweep": "Silnik 2: obrót całej nogi w jej płaszczyźnie",
         "extend": "Silnik 3: napęd czworoboku i efektywna zmiana długości nogi",
-        "trajectory": "Kinematyczne MPC: ruch jednej nogi do celu",
-        "foot_path": "trajektoria stopy",
-        "target": "cel",
+        "setpoint_title": "Kinematyczne MPC: regulacja położenia stopy do stałego punktu",
+        "motion_history": "wykonany ruch stopy (wynik, nie ścieżka zadana)",
+        "setpoint": "stały punkt zadany",
         "states": "Stan układu: trzy współrzędne napędowe",
         "time": "czas [s]",
         "angle": "kąt [rad]",
@@ -72,9 +72,9 @@ _LABELS: dict[Language, dict[str, str]] = {
         "q_extend": "q_extend: zmiana długości",
         "margins": "Marginesy ograniczeń: wartości dodatnie oznaczają obszar dopuszczalny",
         "margin_value": "wartość marginesu",
-        "prediction": "przewidywana trajektoria stopy",
-        "executed": "wykonana trajektoria",
-        "animation": "MPC jednej nogi: stan mechanizmu i przewidywanie",
+        "prediction": "przewidywany ruch w horyzoncie MPC",
+        "executed": "historia wykonanego ruchu",
+        "animation": "Regulacja do punktu: stan mechanizmu i predykcja MPC",
         "minimum_margin": "minimalny margines",
         "side_view": "Silnik 3: obrót krótkiego pręta zmienia położenie stopy i długość nogi",
         "plane_coordinate": "współrzędna w płaszczyźnie mechanizmu [m]",
@@ -102,42 +102,21 @@ def draw_leg(
     linewidth: float = 2.5,
     parameters: LegParameters = DEFAULT_LEG_PARAMETERS,
 ) -> None:
-    """Draw the proximal chain and two branches of the closed mechanism."""
+    """Draw the proximal chain and both branches of the closed mechanism."""
     leg = leg_points(q, parameters)
-    proximal = np.vstack([leg.base, leg.hip_axis, leg.planar_axis])
-    axes.plot(
-        proximal[:, 0],
-        proximal[:, 1],
-        proximal[:, 2],
-        marker="o",
-        linewidth=linewidth,
-    )
-    base_bar = np.vstack([leg.active_pivot, leg.passive_pivot])
-    axes.plot(
-        base_bar[:, 0],
-        base_bar[:, 1],
-        base_bar[:, 2],
-        marker="o",
-        linewidth=linewidth,
-    )
-    active_branch = np.vstack(
-        [leg.active_pivot, leg.active_short_tip, leg.active_chain_end]
-    )
-    axes.plot(
-        active_branch[:, 0],
-        active_branch[:, 1],
-        active_branch[:, 2],
-        marker="o",
-        linewidth=linewidth,
-    )
-    passive_branch = np.vstack([leg.passive_pivot, leg.passive_chain_end])
-    axes.plot(
-        passive_branch[:, 0],
-        passive_branch[:, 1],
-        passive_branch[:, 2],
-        marker="o",
-        linewidth=linewidth,
-    )
+    for points in (
+        np.vstack([leg.base, leg.hip_axis, leg.planar_axis]),
+        np.vstack([leg.active_pivot, leg.passive_pivot]),
+        np.vstack([leg.active_pivot, leg.active_short_tip, leg.active_chain_end]),
+        np.vstack([leg.passive_pivot, leg.passive_chain_end]),
+    ):
+        axes.plot(
+            points[:, 0],
+            points[:, 1],
+            points[:, 2],
+            marker="o",
+            linewidth=linewidth,
+        )
     axes.scatter([leg.foot[0]], [leg.foot[1]], [leg.foot[2]], marker="x", s=70)
 
 
@@ -233,11 +212,12 @@ def save_four_bar_side_view(output: Path, language: Language) -> None:
     plt.close(figure)
 
 
-def save_trajectory_figure(
+def save_setpoint_regulation_figure(
     result: SimulationResult,
     output: Path,
     language: Language,
 ) -> None:
+    """Plot the resulting closed-loop motion toward one fixed foot set-point."""
     labels = _labels(language)
     figure = plt.figure(figsize=(7.6, 6.3), constrained_layout=True)
     axes = figure.add_subplot(111, projection="3d")
@@ -249,17 +229,17 @@ def save_trajectory_figure(
         result.foot[:, 1],
         result.foot[:, 2],
         marker=".",
-        label=labels["foot_path"],
+        label=labels["motion_history"],
     )
     axes.scatter(
-        [result.target[0]],
-        [result.target[1]],
-        [result.target[2]],
+        [result.foot_setpoint[0]],
+        [result.foot_setpoint[1]],
+        [result.foot_setpoint[2]],
         marker="*",
         s=170,
-        label=labels["target"],
+        label=labels["setpoint"],
     )
-    configure_3d_axis(axes, labels["trajectory"], language)
+    configure_3d_axis(axes, labels["setpoint_title"], language)
     axes.legend(loc="upper left")
     figure.savefig(output, dpi=180)
     plt.close(figure)
@@ -334,12 +314,12 @@ def save_animation(
             label=labels["executed"],
         )
         axes.scatter(
-            [result.target[0]],
-            [result.target[1]],
-            [result.target[2]],
+            [result.foot_setpoint[0]],
+            [result.foot_setpoint[1]],
+            [result.foot_setpoint[2]],
             marker="*",
             s=170,
-            label=labels["target"],
+            label=labels["setpoint"],
         )
         configure_3d_axis(axes, labels["animation"], language)
         axes.legend(loc="upper left", fontsize=8)
@@ -369,7 +349,7 @@ def generate_outputs(
     steps: int = 35,
     include_animation: bool = True,
 ) -> SimulationResult:
-    """Generate all demonstration figures and optionally a GIF animation."""
+    """Generate all figures for the fixed Cartesian set-point regulation demo."""
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     labels = _labels(language)
@@ -377,45 +357,31 @@ def generate_outputs(
 
     save_motor_role_figure(
         output_dir / "motor_1_hip_motion.png",
-        [
-            nominal + np.array([-0.45, 0.0, 0.0]),
-            nominal,
-            nominal + np.array([0.45, 0.0, 0.0]),
-        ],
+        [nominal + np.array([-0.45, 0.0, 0.0]), nominal, nominal + np.array([0.45, 0.0, 0.0])],
         labels["hip"],
         language,
     )
     save_motor_role_figure(
         output_dir / "motor_2_whole_leg_rotation.png",
-        [
-            nominal + np.array([0.0, -0.55, 0.0]),
-            nominal,
-            nominal + np.array([0.0, 0.55, 0.0]),
-        ],
+        [nominal + np.array([0.0, -0.55, 0.0]), nominal, nominal + np.array([0.0, 0.55, 0.0])],
         labels["sweep"],
         language,
     )
     save_motor_role_figure(
         output_dir / "motor_3_four_bar_extension.png",
-        [
-            nominal + np.array([0.0, 0.0, -1.10]),
-            nominal,
-            nominal + np.array([0.0, 0.0, 1.10]),
-        ],
+        [nominal + np.array([0.0, 0.0, -1.10]), nominal, nominal + np.array([0.0, 0.0, 1.10])],
         labels["extend"],
         language,
     )
-    save_annotated_roles_figure(
-        output_dir / "leg_three_motor_roles_annotated.png",
-        language,
-    )
-    save_four_bar_side_view(
-        output_dir / "four_bar_extension_side_view.png",
-        language,
-    )
+    save_annotated_roles_figure(output_dir / "leg_three_motor_roles_annotated.png", language)
+    save_four_bar_side_view(output_dir / "four_bar_extension_side_view.png", language)
 
     result = run_simulation(steps=steps)
-    save_trajectory_figure(result, output_dir / "mpc_leg_trajectory.png", language)
+    save_setpoint_regulation_figure(
+        result,
+        output_dir / "mpc_foot_setpoint_regulation.png",
+        language,
+    )
     save_joint_state_figure(result, output_dir / "mpc_joint_states.png", language)
     save_safety_figure(result, output_dir / "mpc_safety_margins.png", language)
     if include_animation:
