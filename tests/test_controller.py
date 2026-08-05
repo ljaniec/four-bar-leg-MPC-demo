@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 
 from four_bar_leg_mpc.controller import MPCParameters, objective, rollout, solve_mpc
 from four_bar_leg_mpc.geometry import foot_position
@@ -44,6 +45,20 @@ def test_objective_uses_one_constant_cartesian_foot_setpoint() -> None:
         mpc_parameters=parameters,
     )
     assert cost == 0.0
+
+
+def test_controller_rejects_time_indexed_reference_trajectory() -> None:
+    parameters = MPCParameters(horizon=2)
+    q = np.array([0.0, 3.1, 3.3])
+    trajectory_shaped_reference = np.zeros((parameters.horizon, 3))
+
+    with pytest.raises(ValueError, match="does not accept a time-indexed reference"):
+        solve_mpc(
+            q=q,
+            foot_setpoint=trajectory_shaped_reference,
+            q_nominal=q,
+            mpc_parameters=parameters,
+        )
 
 
 def test_simulation_stores_a_single_fixed_setpoint() -> None:
