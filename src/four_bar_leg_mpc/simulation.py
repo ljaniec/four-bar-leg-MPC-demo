@@ -1,4 +1,4 @@
-"""Closed-loop simulation utilities for the one-leg MPC demonstration."""
+"""Closed-loop set-point-regulation simulation for the one-leg MPC demo."""
 
 from __future__ import annotations
 
@@ -16,26 +16,31 @@ FloatArray = NDArray[np.float64]
 
 @dataclass(frozen=True)
 class SimulationResult:
-    """Closed-loop state, foot, control, safety, and prediction histories."""
+    """Closed-loop histories for Cartesian foot set-point regulation."""
 
     q: FloatArray
     foot: FloatArray
     controls: FloatArray
     safety: dict[str, FloatArray]
     predictions: list[FloatArray]
-    target: FloatArray
-    q_goal: FloatArray
+    foot_setpoint: FloatArray
+    q_nominal: FloatArray
 
 
 def run_simulation(
     steps: int = 35,
     initial_q: FloatArray | None = None,
-    goal_q: FloatArray | None = None,
+    nominal_q: FloatArray | None = None,
     leg_parameters: LegParameters = DEFAULT_LEG_PARAMETERS,
     safety_parameters: SafetyParameters = DEFAULT_SAFETY_PARAMETERS,
     mpc_parameters: MPCParameters = DEFAULT_MPC_PARAMETERS,
 ) -> SimulationResult:
-    """Run the receding-horizon controller against its kinematic model."""
+    """Regulate the foot from its initial position to one fixed Cartesian set-point.
+
+    The set-point is computed once from ``nominal_q`` and remains constant for
+    every closed-loop MPC solve. The predicted point sequences are optimizer
+    rollouts, not a desired path and not a time-indexed reference trajectory.
+    """
     if steps <= 0:
         raise ValueError("steps must be positive.")
 
@@ -44,15 +49,15 @@ def run_simulation(
         if initial_q is None
         else np.asarray(initial_q, dtype=float).copy()
     )
-    q_goal = (
+    q_nominal = (
         np.array([-0.20, 2.70, 4.20], dtype=float)
-        if goal_q is None
-        else np.asarray(goal_q, dtype=float).copy()
+        if nominal_q is None
+        else np.asarray(nominal_q, dtype=float).copy()
     )
-    if q.shape != (3,) or q_goal.shape != (3,):
-        raise ValueError("initial_q and goal_q must have shape (3,).")
+    if q.shape != (3,) or q_nominal.shape != (3,):
+        raise ValueError("initial_q and nominal_q must have shape (3,).")
 
-    target = foot_position(q_goal, leg_parameters)
+    foot_setpoint = foot_position(q_nominal, leg_parameters)
     warm_start = np.zeros((mpc_parameters.horizon, 3), dtype=float)
     previous_velocity = np.zeros(3, dtype=float)
 
@@ -68,8 +73,8 @@ def run_simulation(
     for _ in range(steps):
         velocity, controls = solve_mpc(
             q=q,
-            foot_target=target,
-            q_nominal=q_goal,
+            foot_setpoint=foot_setpoint,
+            q_nominal=q_nominal,
             warm_start=warm_start,
             previous_velocity=previous_velocity,
             leg_parameters=leg_parameters,
@@ -77,7 +82,7 @@ def run_simulation(
             mpc_parameters=mpc_parameters,
         )
         q_prediction = rollout(q, controls, mpc_parameters)
-        predicted_feet = np.asarray(
+        predicted_foot_motion = np.asarray(
             [foot_position(q_pred, leg_parameters) for q_pred in q_prediction],
             dtype=float,
         )
@@ -85,7 +90,7 @@ def run_simulation(
         q_history.append(q.copy())
         foot_history.append(foot_position(q, leg_parameters))
         control_history.append(velocity.copy())
-        predictions.append(predicted_feet)
+        predictions.append(predicted_foot_motion)
 
         for key, value in safety_margins(
             q,
@@ -116,6 +121,6 @@ def run_simulation(
             for key, values in safety_history.items()
         },
         predictions=predictions,
-        target=target,
-        q_goal=q_goal,
+        foot_setpoint=foot_setpoint,
+        q_nominal=q_nominal,
     )
