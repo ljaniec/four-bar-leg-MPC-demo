@@ -44,7 +44,9 @@ _LABELS: dict[Language, dict[str, str]] = {
         "executed": "closed-loop motion history",
         "animation": "Foot set-point regulation: state and MPC prediction",
         "minimum_margin": "minimum margin",
-        "side_view": "Motor 3: short-link rotation changes foot position and effective length",
+        "side_view": (
+            "Motor 3: short-link rotation changes foot position and effective length"
+        ),
         "plane_coordinate": "mechanism-plane coordinate [m]",
         "roles": "One leg: three actuators and a closed mechanism",
         "roles_text": (
@@ -61,7 +63,9 @@ _LABELS: dict[Language, dict[str, str]] = {
         "hip": "Silnik 1: ruch biodra do wewnątrz i na zewnątrz",
         "sweep": "Silnik 2: obrót całej nogi w jej płaszczyźnie",
         "extend": "Silnik 3: napęd czworoboku i efektywna zmiana długości nogi",
-        "setpoint_title": "Kinematyczne MPC: regulacja położenia stopy do stałego punktu",
+        "setpoint_title": (
+            "Kinematyczne MPC: regulacja położenia stopy do stałego punktu"
+        ),
         "motion_history": "wykonany ruch stopy (wynik, nie ścieżka zadana)",
         "setpoint": "stały punkt zadany",
         "states": "Stan układu: trzy współrzędne napędowe",
@@ -70,13 +74,17 @@ _LABELS: dict[Language, dict[str, str]] = {
         "q_hip": "q_hip: do wewnątrz / na zewnątrz",
         "q_sweep": "q_sweep: obrót całej nogi",
         "q_extend": "q_extend: zmiana długości",
-        "margins": "Marginesy ograniczeń: wartości dodatnie oznaczają obszar dopuszczalny",
+        "margins": (
+            "Marginesy ograniczeń: wartości dodatnie oznaczają obszar dopuszczalny"
+        ),
         "margin_value": "wartość marginesu",
         "prediction": "przewidywany ruch w horyzoncie MPC",
         "executed": "historia wykonanego ruchu",
         "animation": "Regulacja do punktu: stan mechanizmu i predykcja MPC",
         "minimum_margin": "minimalny margines",
-        "side_view": "Silnik 3: obrót krótkiego pręta zmienia położenie stopy i długość nogi",
+        "side_view": (
+            "Silnik 3: obrót krótkiego pręta zmienia położenie stopy i długość nogi"
+        ),
         "plane_coordinate": "współrzędna w płaszczyźnie mechanizmu [m]",
         "roles": "Jedna noga: trzy napędy i zamknięty mechanizm",
         "roles_text": (
@@ -117,7 +125,13 @@ def draw_leg(
             marker="o",
             linewidth=linewidth,
         )
-    axes.scatter([leg.foot[0]], [leg.foot[1]], [leg.foot[2]], marker="x", s=70)
+    axes.scatter(
+        [leg.foot[0]],
+        [leg.foot[1]],
+        [leg.foot[2]],
+        marker="x",
+        s=70,
+    )
 
 
 def configure_3d_axis(axes: Axes, title: str, language: Language) -> None:
@@ -357,24 +371,42 @@ def generate_outputs(
 
     save_motor_role_figure(
         output_dir / "motor_1_hip_motion.png",
-        [nominal + np.array([-0.45, 0.0, 0.0]), nominal, nominal + np.array([0.45, 0.0, 0.0])],
+        [
+            nominal + np.array([-0.45, 0.0, 0.0]),
+            nominal,
+            nominal + np.array([0.45, 0.0, 0.0]),
+        ],
         labels["hip"],
         language,
     )
     save_motor_role_figure(
         output_dir / "motor_2_whole_leg_rotation.png",
-        [nominal + np.array([0.0, -0.55, 0.0]), nominal, nominal + np.array([0.0, 0.55, 0.0])],
+        [
+            nominal + np.array([0.0, -0.55, 0.0]),
+            nominal,
+            nominal + np.array([0.0, 0.55, 0.0]),
+        ],
         labels["sweep"],
         language,
     )
     save_motor_role_figure(
         output_dir / "motor_3_four_bar_extension.png",
-        [nominal + np.array([0.0, 0.0, -1.10]), nominal, nominal + np.array([0.0, 0.0, 1.10])],
+        [
+            nominal + np.array([0.0, 0.0, -1.10]),
+            nominal,
+            nominal + np.array([0.0, 0.0, 1.10]),
+        ],
         labels["extend"],
         language,
     )
-    save_annotated_roles_figure(output_dir / "leg_three_motor_roles_annotated.png", language)
-    save_four_bar_side_view(output_dir / "four_bar_extension_side_view.png", language)
+    save_annotated_roles_figure(
+        output_dir / "leg_three_motor_roles_annotated.png",
+        language,
+    )
+    save_four_bar_side_view(
+        output_dir / "four_bar_extension_side_view.png",
+        language,
+    )
 
     result = run_simulation(steps=steps)
     save_setpoint_regulation_figure(
