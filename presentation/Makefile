@@ -7,7 +7,7 @@ SECTIONS := $(wildcard sections/*.tex)
 GENERATED_FIGURES := \
 	figures/leg_three_motor_roles_annotated.png \
 	figures/four_bar_extension_side_view.png \
-	figures/mpc_leg_trajectory.png \
+	figures/mpc_foot_setpoint_regulation.png \
 	figures/mpc_joint_states.png \
 	figures/mpc_safety_margins.png
 
