@@ -2,6 +2,7 @@ TEX := mpc_dla_robota_czworonoznego.tex
 PDF := mpc_dla_robota_czworonoznego.pdf
 ENGINE ?= xelatex
 PYTHON ?= python
+SECTIONS := $(wildcard sections/*.tex)
 
 GENERATED_FIGURES := \
 	figures/leg_three_motor_roles_annotated.png \
@@ -10,7 +11,7 @@ GENERATED_FIGURES := \
 	figures/mpc_joint_states.png \
 	figures/mpc_safety_margins.png
 
-.PHONY: pdf figures clean
+.PHONY: pdf figures clean clean-generated
 
 pdf: $(PDF)
 
@@ -22,7 +23,7 @@ $(GENERATED_FIGURES):
 		--language pl \
 		--no-animation
 
-$(PDF): $(TEX) $(GENERATED_FIGURES)
+$(PDF): $(TEX) $(SECTIONS) $(GENERATED_FIGURES)
 	$(ENGINE) -interaction=nonstopmode -halt-on-error $(TEX)
 	$(ENGINE) -interaction=nonstopmode -halt-on-error $(TEX)
 
