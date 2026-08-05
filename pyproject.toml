@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "four-bar-leg-mpc-demo"
-version = "0.1.1"
+version = "0.2.0"
 description = "Constrained kinematic MPC demo for Cartesian foot set-point regulation on one four-bar quadruped leg."
 readme = "README.md"
 requires-python = ">=3.10"
