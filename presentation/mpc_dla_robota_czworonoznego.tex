@@ -1,0 +1,71 @@
+\documentclass[aspectratio=169,11pt]{beamer}
+
+\usepackage{fontspec}
+\setsansfont{DejaVu Sans}
+\setmonofont{DejaVu Sans Mono}
+\usepackage[polish]{babel}
+\usepackage{amsmath,amssymb,bm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc,fit,shapes.geometric}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{pgfpages}
+
+\hypersetup{colorlinks=true, urlcolor=blue!70!black, linkcolor=blue!70!black}
+\setbeameroption{hide notes}
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{footline}{%
+  \leavevmode\hbox{%
+  \begin{beamercolorbox}[wd=.78\paperwidth,ht=2.7ex,dp=1ex,leftskip=1em]{author in head/foot}%
+    MPC dla robota kroczącego: od jednej nogi do architektury bezpieczeństwa
+  \end{beamercolorbox}%
+  \begin{beamercolorbox}[wd=.22\paperwidth,ht=2.7ex,dp=1ex,center]{date in head/foot}%
+    \insertframenumber/\inserttotalframenumber
+  \end{beamercolorbox}}%
+}
+\setbeamertemplate{itemize item}{\raisebox{0.15ex}{\scriptsize$\blacktriangleright$}}
+\setbeamertemplate{itemize subitem}{\scriptsize$\circ$}
+\setbeamersize{text margin left=9mm,text margin right=9mm}
+
+\definecolor{pwrblue}{RGB}{22,74,132}
+\definecolor{darktext}{RGB}{25,25,25}
+\definecolor{softgray}{RGB}{245,247,250}
+\definecolor{warn}{RGB}{160,65,25}
+\definecolor{safe}{RGB}{34,120,70}
+\setbeamercolor{title}{fg=pwrblue}
+\setbeamercolor{frametitle}{fg=pwrblue}
+\setbeamercolor{normal text}{fg=darktext}
+\setbeamercolor{block title}{fg=white,bg=pwrblue}
+\setbeamercolor{block body}{fg=darktext,bg=softgray}
+
+\lstdefinestyle{pseudocode}{
+  basicstyle=\ttfamily\small,
+  columns=fullflexible,
+  keepspaces=true,
+  showstringspaces=false,
+  frame=single,
+  rulecolor=\color{black!20},
+  backgroundcolor=\color{softgray}
+}
+
+\newcommand{\source}[1]{{\vfill\tiny\color{black!55}Źródło / kontekst: #1}}
+\newcommand{\key}[1]{\textbf{\color{pwrblue}#1}}
+\newcommand{\warntext}[1]{\textbf{\color{warn}#1}}
+\newcommand{\safetext}[1]{\textbf{\color{safe}#1}}
+
+\title{Model Predictive Control dla czworonożnego robota kroczącego}
+\subtitle{Od modelu jednej nogi do bezpiecznej architektury sterowania}
+\author{Łukasz Janiec}
+\date{2026}
+
+\begin{document}
+
+\input{sections/01_wprowadzenie.tex}
+\input{sections/02_model_nogi.tex}
+\input{sections/03_mpc.tex}
+\input{sections/04_lokomocja.tex}
+\input{sections/05_bezpieczenstwo_i_appendix.tex}
+
+\end{document}

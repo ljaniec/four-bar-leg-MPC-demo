@@ -1,0 +1,167 @@
+% 25
+\begin{frame}{Control Barrier Functions: funkcje barierowe bezpieczeństwa}
+\begin{block}{Control Barrier Functions (CBF)}
+Funkcje barierowe bezpieczeństwa opisują zbiór stanów dopuszczalnych i narzucają warunek, aby sterowanie nie wypchnęło układu poza ten zbiór.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{0.48\textwidth}
+\[
+\mathcal C = \{x: h(x)\ge 0\}
+\]
+\[
+\text{chcemy utrzymać } x(t)\in\mathcal C
+\]
+\column{0.48\textwidth}
+\begin{itemize}
+  \item $h(x)>0$: zapas bezpieczeństwa.
+  \item $h(x)=0$: granica bezpieczeństwa.
+  \item $h(x)<0$: stan narusza warunek.
+\end{itemize}
+\end{columns}
+\begin{block}{Interpretacja dla nogi}
+CBF nie musi uczyć chodu. Ma zabronić sterowania, które prowadzi w konfiguracje zbyt szerokie, osobliwe albo bez zapasu momentu.
+\end{block}
+\note{Należy użyć pełnej nazwy przed skrótem. Warto powiedzieć, że CBF to język do opisu bezpieczeństwa, a nie magiczna gwarancja bez dobrze zdefiniowanego modelu i zbioru bezpiecznego.}
+\end{frame}
+
+% 26
+\begin{frame}{CBF jako filtr dla polityki uczonej}
+\begin{columns}[T,onlytextwidth]
+\column{0.54\textwidth}
+\begin{center}
+\begin{tikzpicture}[node distance=0.65cm,>=Latex]
+  \tikzstyle{box}=[draw,rounded corners=2pt,fill=blue!6,minimum width=3.1cm,minimum height=0.75cm,align=center,font=\small]
+  \node[box] (rl) {polityka Reinforcement\\Learning};
+  \node[box,below=of rl] (filter) {filtr CBF / MPC};
+  \node[box,below=of filter] (drive) {sterowanie napędów};
+  \node[box,below=of drive] (robot) {robot + podłoże};
+  \draw[->,thick] (rl)--node[right,font=\scriptsize]{propozycja} (filter);
+  \draw[->,thick] (filter)--node[right,font=\scriptsize]{bezpieczna korekta} (drive);
+  \draw[->,thick] (drive)--(robot);
+  \draw[->,thick] (robot.west) .. controls +(-1.2,0) and +(-1.2,0) .. (filter.west);
+\end{tikzpicture}
+\end{center}
+\column{0.42\textwidth}
+\begin{itemize}
+  \item RL proponuje szybkie zachowanie.
+  \item Filtr sprawdza warunki bezpieczeństwa.
+  \item Jeśli akcja jest ryzykowna, filtr ją koryguje lub odrzuca.
+\end{itemize}
+\begin{block}{Najbliższa literatura}
+CBF + MPC zademonstrowano m.in. na ANYmalu w pracy o wielowarstwowym bezpieczeństwie lokomocji.
+\end{block}
+\end{columns}
+\note{To slajd z bardzo praktycznym przekazem: nie trzeba od razu zastępować RL. Można zacząć od nadzorcy, który ma jawny model i jawne bariery.}
+\end{frame}
+
+% 27
+\begin{frame}{Docelowa architektura projektu}
+\begin{center}
+\begin{tikzpicture}[node distance=0.45cm and 0.42cm,>=Latex]
+  \tikzstyle{box}=[draw,rounded corners=2pt,fill=blue!6,minimum width=1.95cm,minimum height=0.62cm,align=center,font=\scriptsize]
+  \node[box] (sensors) {czujniki};
+  \node[box,right=of sensors] (est) {estymacja\\stanu};
+  \node[box,right=of est] (rl) {polityka\\RL};
+  \node[box,right=of rl] (mpc) {MPC / filtr\\bezpieczeństwa};
+  \node[box,right=of mpc] (drive) {sterowanie\\impedancyjne};
+  \node[box,right=of drive] (robot) {robot};
+  \node[box,below=of mpc] (cbf) {warstwa CBF};
+  \draw[->,thick] (sensors)--(est);
+  \draw[->,thick] (est)--(rl);
+  \draw[->,thick] (rl)--(mpc);
+  \draw[->,thick] (cbf)--(mpc);
+  \draw[->,thick] (mpc)--(drive);
+  \draw[->,thick] (drive)--(robot);
+  \draw[->,thick] (est.south) |- (cbf.west);
+  \draw[->,thick] (robot.south) .. controls +(0,-0.9) and +(0,-0.9) .. (sensors.south);
+\end{tikzpicture}
+\end{center}
+\vspace{0.2em}
+\begin{itemize}
+  \item Wersja minimalna: CBF/MPC filtruje ryzykowne konfiguracje jednej nogi.
+  \item Wersja rozszerzona: MPC planuje siły kontaktowe, a WBC rozdziela zadania na przeguby.
+  \item Warunek projektu naukowego: mierzalna redukcja awarii poza scenariuszami treningowymi.
+\end{itemize}
+\note{To jest slajd spinający projekt. Można na nim powiedzieć: nie budujemy wszystkiego naraz. Pierwszy etap to mały filtr bezpieczeństwa i model jednej nogi, dopiero później pełna lokomocja.}
+\end{frame}
+
+% 28
+\begin{frame}{Demonstracja czy wynik badawczy?}
+\begin{columns}[T,onlytextwidth]
+\column{0.48\textwidth}
+\begin{block}{Demonstracja}
+\begin{itemize}
+  \item Robot przeszedł trasę.
+  \item Film wygląda przekonująco.
+  \item Sukces może zależeć od jednego podłoża, jednej baterii i jednego strojenia.
+\end{itemize}
+\end{block}
+\column{0.48\textwidth}
+\begin{block}{Wynik badawczy}
+\begin{itemize}
+  \item Zdefiniowano klasę awarii.
+  \item Metoda mierzalnie redukuje tę klasę awarii.
+  \item Testy obejmują podłoża, zakłócenia i przypadki spoza treningu.
+\end{itemize}
+\end{block}
+\end{columns}
+\vspace{0.4em}
+\begin{block}{Proponowane kryterium pierwszego etapu}
+Na jednej nodze: mniej wejść w konfiguracje nieodzyskiwalne przy ograniczeniach tarcia, momentu i geometrii, bez utraty zdolności do osiągania punktów roboczych.
+\end{block}
+\note{Użytkownik chciał mocniej podkreślić różnicę między projektem demonstracyjnym i naukowym. Tu jest sedno: film nie wystarcza. Trzeba mieć definicję awarii, metrykę i porównanie z bazą.}
+\end{frame}
+
+% 29 Appendix A
+\appendix
+\begin{frame}{Appendix A: od sił kontaktowych do momentów napędów}
+\begin{columns}[T,onlytextwidth]
+\column{0.48\textwidth}
+\begin{block}{Najprostsza intuicja statyczna}
+\[
+\tau \approx J(q)^T f
+\]
+\end{block}
+\begin{itemize}
+  \item $f$ - siła działająca w stopie.
+  \item $J(q)^T$ - przeniesienie siły na momenty przegubów.
+\end{itemize}
+\column{0.48\textwidth}
+\begin{block}{W rzeczywistości dochodzi}
+\begin{itemize}
+  \item dynamika członów,
+  \item więzy mechanizmu równoległego,
+  \item tarcie i poślizg,
+  \item limity napędów i przekładni,
+  \item opóźnienia komunikacji i regulatorów.
+\end{itemize}
+\end{block}
+\end{columns}
+\begin{block}{Dlaczego appendix?}
+Ten slajd jest dobry do dyskusji technicznej, ale nie jest potrzebny każdemu odbiorcy w głównej narracji.
+\end{block}
+\note{Appendix pomaga, jeśli ktoś zapyta: skąd momenty w silnikach biorą się z planowania sił kontaktowych. To też miejsce na dyskusję, czy model jednej nogi wystarczy.}
+\end{frame}
+
+% 30 Appendix B
+\begin{frame}{Appendix B: materiały startowe i pełniejszy problem}
+\small
+\begin{itemize}
+  \item \href{https://underactuated.mit.edu/trajopt.html}{MIT Underactuated Robotics: Trajectory Optimization} - najlepszy pierwszy materiał o optymalizacji trajektorii i idei przesuwającego się horyzontu.
+  \item \href{https://ieeexplore.ieee.org/document/8594448}{MIT Cheetah 3 przez wypukłe MPC} - klasyczny przykład szybkiego planowania sił reakcji podłoża dla czworonoga.
+  \item \href{https://github.com/iit-DLSLab/Quadruped-PyMPC}{Quadruped-PyMPC} - praktyczny kod w Pythonie dla MPC opartego o model pojedynczego ciała sztywnego.
+  \item \href{https://arxiv.org/abs/2011.00032}{CBF + MPC dla ANYmal} - najbliższy punkt startowy dla warstwy bezpieczeństwa w robotach kroczących.
+  \item \href{https://arxiv.org/abs/2503.04613}{Whole-Body MPC z MuJoCo} - współczesny przykład MPC całego ciała dla czworonogów i humanoidów.
+\end{itemize}
+\vspace{-0.25em}
+\begin{block}{Pełniejsza formulacja jednej nogi}
+\[
+\min \sum_k \left(
+\|p_F-p_F^{ref}\|^2 + \|q-q_{nom}\|^2 + \|\tau\|^2\right)
+\]
+\[
+\Phi(q,z)=0,\quad q_{min}\le q\le q_{max},\quad |\tau|\le\tau_{max},\quad h(q,\dot q)\ge0.
+\]
+\end{block}
+\note{To jest slajd kończący i jednocześnie źródła. Każdy materiał ma jedno zdanie opisu, tak jak użytkownik poprosił. Dyad jest świadomie pominięty ze względu na komercyjną licencję, a może być wspomniany ustnie.}
+\end{frame}
