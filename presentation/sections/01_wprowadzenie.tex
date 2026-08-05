@@ -3,7 +3,7 @@
   \titlepage
   \vspace{-1.2em}
   \begin{center}
-  \small Dla odbiorców inżynierskich: jasno, ale bez ukrywania modelu, ograniczeń i ryzyk.
+  \small Dla inżynierów: jasno, ale bez ukrywania modelu, ograniczeń i ryzyk.
   \end{center}
   \note{Slajd ustawia cel prezentacji: nie jest to gotowa obietnica produktu, tylko początek projektu badawczego nad sterowaniem predykcyjnym i bezpieczeństwem lokomocji.}
 \end{frame}
@@ -29,19 +29,18 @@
   }
   \draw[->,thick,pwrblue] (-1.9,1.4)--(1.9,1.4);
   \node[font=\scriptsize] at (0,1.65) {ruch korpusu i harmonogram kontaktów};
-  \draw[rounded corners=2pt,fill=softgray] (-1.55,-2.2) rectangle (1.55,-1.7);
   \node[font=\scriptsize,align=center] at (0,-1.95) {RL proponuje ruch\\MPC i CBF kontrolują ryzyko};
 \end{tikzpicture}
 \end{center}
+
+Czym jest MPC: przewidywanie, optymalizacja, ograniczenia, sterowanie w pętli.
 \end{columns}
-\source{Opis platformy z załączonego streszczenia KKR: cztery kończyny, 3 stopnie swobody na kończynę, ROS 2, CAN, tryby sterowania napędów.}
+\source{Opis platformy z KKR: cztery kończyny, 3 stopnie swobody na kończynę, ROS 2, CAN, tryby sterowania napędów.}
 \note{Należy wyjaśnić, że projekt nie neguje uczenia przez wzmacnianie. Chodzi o dodanie warstwy modelowej i bezpieczeństwa tam, gdzie czysta polityka uczona nie ma jawnych gwarancji.}
 \end{frame}
 
 % 3
 \begin{frame}{Platforma: co wiemy z dokumentacji}
-\begin{columns}[T,onlytextwidth]
-\column{0.54\textwidth}
 \begin{itemize}
   \item Korpus aluminiowy i cztery kończyny.
   \item Każda kończyna: \key{trzy stopnie swobody}.
@@ -49,25 +48,6 @@
   \item Napędy: silniki bezszczotkowe prądu stałego z przekładniami planetarnymi.
   \item Sterowanie z komputera przez \key{Robot Operating System 2 (ROS 2)} i \key{Controller Area Network (CAN)}.
 \end{itemize}
-\column{0.42\textwidth}
-\begin{center}
-\begin{tikzpicture}[scale=0.72]
-  \node[font=\scriptsize] at (0,2.25) {widok z góry};
-  \draw[thick,rounded corners=2pt,fill=blue!7] (-1.4,1.35) rectangle (1.4,1.95);
-  \foreach \x in {-1.1,1.1} {\foreach \y in {1.25,2.05} {\draw[thick] (\x,\y)--(\x+0.25,\y+0.22);}}
-
-  \node[font=\scriptsize] at (0,0.75) {widok z przodu};
-  \draw[thick,fill=blue!7] (-1.2,0.1) rectangle (1.2,0.55);
-  \draw[thick] (-0.85,0.1)--(-1.25,-0.85)--(-1.55,-1.35);
-  \draw[thick] (0.85,0.1)--(1.25,-0.85)--(1.55,-1.35);
-
-  \node[font=\scriptsize] at (0,-1.75) {widok z boku};
-  \draw[thick,fill=blue!7] (-1.4,-2.55) rectangle (1.4,-2.15);
-  \draw[thick] (-0.95,-2.55)--(-0.55,-3.15)--(-0.35,-3.55);
-  \draw[thick] (0.95,-2.55)--(0.55,-3.15)--(0.35,-3.55);
-\end{tikzpicture}
-\end{center}
-\end{columns}
 {\vspace{0.15em}\tiny\color{black!55}Źródło: załączony PDF, s. 1-2. Pełne dane CAD, bezwładności i ograniczenia momentu wymagają uzupełnienia.}
 \note{Tu trzeba wyraźnie odróżnić fakty z PDF-a od przyszłych założeń modelowych. Dokładny model wymaga CAD-u, danych silników, przekładni i identyfikacji.}
 \end{frame}
@@ -81,6 +61,7 @@
   \item Kontakt może się pojawić, zniknąć, poślizgnąć albo uderzyć w podłoże.
   \item Tarcie i nierówności podłoża są częścią sterowania, nie tylko zakłóceniem.
   \item Błąd jednej nogi może zmienić równowagę całego korpusu.
+  \item Kontakt i podłoże są aktywnymi elementami układu.
 \end{itemize}
 \column{0.44\textwidth}
 \begin{block}{Konsekwencja dla sterowania}

@@ -51,6 +51,7 @@ h    = model.safety_margins(q, dq)
   \item Najważniejsze pytanie: \key{czy przewiduje właściwe ryzyka?}
   \item Na początku wystarczą kinematyka, ograniczenia, margines osobliwości i prosta dynamika.
 \end{itemize}
+Sterowanie predykcyjne potrzebuje modelu użytecznego dla horyzontu predykcji, nie kompletnego cyfrowego bliźniaka.
 \end{columns}
 \note{To dobry slajd do rozbrojenia obawy, że model musi być idealny. Sterowanie predykcyjne potrzebuje modelu użytecznego dla horyzontu predykcji, nie kompletnego cyfrowego bliźniaka.}
 \end{frame}
@@ -96,10 +97,9 @@ repeat at control rate:
     \draw[fill=blue!5] (0.62*\i,0) circle (0.08);
   }
   \draw[->,thick,pwrblue] (0,0)--(3.2,0);
-  \draw[thick,warn] (0,0.35)--(3.1,0.35);
   \node[font=\scriptsize] at (1.55,0.68) {predykcja};
   \draw[->,very thick,safe] (0,-0.35)--(0.62,-0.35);
-  \node[font=\scriptsize,align=center] at (1.45,-0.68) {wykonujemy tylko\\pierwszy krok};
+  \node[font=\scriptsize,align=center] at (1.45,-0.88) {wykonujemy tylko\\pierwszy krok};
 \end{tikzpicture}
 \end{center}
 \begin{itemize}
@@ -107,6 +107,9 @@ repeat at control rate:
   \item Ograniczenia są częścią zadania, nie dopiskiem po fakcie.
 \end{itemize}
 \end{columns}
+
+\vspace{3pt}
+MPC nie układa pełnej trasy raz na zawsze. Cały czas planuje krótki horyzont i wykonuje pierwszy element planu.
 \note{Dla laików najważniejsza jest intuicja: MPC nie układa pełnej trasy raz na zawsze. Cały czas planuje krótki horyzont i wykonuje pierwszy element planu.}
 \end{frame}
 
@@ -114,7 +117,7 @@ repeat at control rate:
 \begin{frame}{Najprostszy demonstrator MPC dla jednej nogi}
 \begin{columns}[T,onlytextwidth]
 \column{0.46\textwidth}
-\begin{block}{Model kinematyczny użyty w kodzie}
+\begin{block}{Model \textit{kinematyczny} użyty w kodzie}
 \[
 x_k=q_k,\qquad u_k=\dot q_k,
 \]

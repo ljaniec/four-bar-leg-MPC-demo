@@ -1,7 +1,7 @@
 % 25
 \begin{frame}{Control Barrier Functions: funkcje barierowe bezpieczeństwa}
 \begin{block}{Control Barrier Functions (CBF)}
-Funkcje barierowe bezpieczeństwa opisują zbiór stanów dopuszczalnych i narzucają warunek, aby sterowanie nie wypchnęło układu poza ten zbiór.
+CBF opisują zbiór stanów dopuszczalnych i narzucają warunek, aby sterowanie nie wypchnęło układu poza ten zbiór.
 \end{block}
 \begin{columns}[T,onlytextwidth]
 \column{0.48\textwidth}
@@ -19,7 +19,7 @@ Funkcje barierowe bezpieczeństwa opisują zbiór stanów dopuszczalnych i narzu
 \end{itemize}
 \end{columns}
 \begin{block}{Interpretacja dla nogi}
-CBF nie musi uczyć chodu. Ma zabronić sterowania, które prowadzi w konfiguracje zbyt szerokie, osobliwe albo bez zapasu momentu.
+{\scriptsize CBF nie musi uczyć chodu. Ma zabronić sterowania, które prowadzi w konfiguracje zbyt szerokie, osobliwe albo bez zapasu momentu. CBF to język do opisu bezpieczeństwa, a nie magiczna gwarancja bez dobrze zdefiniowanego modelu i zbioru bezpiecznego.}
 \end{block}
 \note{Należy użyć pełnej nazwy przed skrótem. Warto powiedzieć, że CBF to język do opisu bezpieczeństwa, a nie magiczna gwarancja bez dobrze zdefiniowanego modelu i zbioru bezpiecznego.}
 \end{frame}
@@ -55,7 +55,7 @@ CBF + MPC zademonstrowano m.in. na ANYmalu w pracy o wielowarstwowym bezpieczeń
 \end{frame}
 
 % 27
-\begin{frame}{Docelowa architektura projektu}
+\begin{frame}{Docelowa architektura projektu?}
 \begin{center}
 \begin{tikzpicture}[node distance=0.45cm and 0.42cm,>=Latex]
   \tikzstyle{box}=[draw,rounded corners=2pt,fill=blue!6,minimum width=1.95cm,minimum height=0.62cm,align=center,font=\scriptsize]
@@ -73,7 +73,7 @@ CBF + MPC zademonstrowano m.in. na ANYmalu w pracy o wielowarstwowym bezpieczeń
   \draw[->,thick] (mpc)--(drive);
   \draw[->,thick] (drive)--(robot);
   \draw[->,thick] (est.south) |- (cbf.west);
-  \draw[->,thick] (robot.south) .. controls +(0,-0.9) and +(0,-0.9) .. (sensors.south);
+  \draw[->,thick] (robot.south) .. controls +(0,-1.9) and +(0,-1.9) .. (sensors.south);
 \end{tikzpicture}
 \end{center}
 \vspace{0.2em}
@@ -138,7 +138,7 @@ Na jednej nodze: mniej wejść w konfiguracje nieodzyskiwalne przy ograniczeniac
 \end{block}
 \end{columns}
 \begin{block}{Dlaczego appendix?}
-Ten slajd jest dobry do dyskusji technicznej, ale nie jest potrzebny każdemu odbiorcy w głównej narracji.
+To slajd do dyskusji technicznej, nie jest potrzebny każdemu odbiorcy w głównej narracji.
 \end{block}
 \note{Appendix pomaga, jeśli ktoś zapyta: skąd momenty w silnikach biorą się z planowania sił kontaktowych. To też miejsce na dyskusję, czy model jednej nogi wystarczy.}
 \end{frame}
@@ -154,14 +154,5 @@ Ten slajd jest dobry do dyskusji technicznej, ale nie jest potrzebny każdemu od
   \item \href{https://arxiv.org/abs/2503.04613}{Whole-Body MPC z MuJoCo} - współczesny przykład MPC całego ciała dla czworonogów i humanoidów.
 \end{itemize}
 \vspace{-0.25em}
-\begin{block}{Pełniejsza formulacja jednej nogi}
-\[
-\min \sum_k \left(
-\|p_F-p_F^{ref}\|^2 + \|q-q_{nom}\|^2 + \|\tau\|^2\right)
-\]
-\[
-\Phi(q,z)=0,\quad q_{min}\le q\le q_{max},\quad |\tau|\le\tau_{max},\quad h(q,\dot q)\ge0.
-\]
-\end{block}
 \note{To jest slajd kończący i jednocześnie źródła. Każdy materiał ma jedno zdanie opisu, tak jak użytkownik poprosił. Dyad jest świadomie pominięty ze względu na komercyjną licencję, a może być wspomniany ustnie.}
 \end{frame}

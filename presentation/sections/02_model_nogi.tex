@@ -1,5 +1,5 @@
 % 7
-\begin{frame}{Jedna noga jako pierwszy model badawczy}
+\begin{frame}{Jedna noga jako pierwszy model badawczy dla MPC i robotów kroczących}
 \begin{columns}[T,onlytextwidth]
 \column{0.50\textwidth}
 \begin{itemize}
@@ -49,13 +49,14 @@ q_{\mathrm{hip}} & q_{\mathrm{sweep}} & q_{\mathrm{extend}}
 \end{bmatrix}^{T}
 \]
 \end{block}
-\begin{block}{Domknięcie pętli}
+\begin{block}{Domknięcie równoległoboku: współrzędne bierne}
 \[
 q_p=g(q_{\mathrm{extend}}),
 \qquad \Phi(q_a,q_p)=0.
 \]
 \end{block}
 \end{columns}
+
 \note{W kodzie Pythona dwa kąty bierne są rekonstruowane przez bezpośrednią adaptację funkcji update_passive_joints z kontrolera ROS 2.}
 \end{frame}
 
@@ -119,8 +120,8 @@ h_{\mathrm{sing}}(q) = \sigma_{\min}(J(q)) - \varepsilon \ge 0
   \draw[->] (0,-0.2)--(0,2.1) node[above,font=\scriptsize] {margines};
   \draw[thick,safe] plot[smooth] coordinates {(0.2,1.8)(1.0,1.6)(1.8,1.1)(2.6,0.45)(3.4,0.12)};
   \draw[thick,warn,dashed] (0,0.45)--(3.8,0.45);
-  \node[font=\scriptsize,align=center] at (2.5,1.35) {bezpiecznie};
-  \node[font=\scriptsize,align=center,warn] at (2.8,0.25) {za blisko\\osobliwości};
+  \node[font=\scriptsize,align=center] at (2.6,1.35) {bezpiecznie};
+  \node[font=\scriptsize,align=center,warn] at (2.8,0-0.4) {za blisko\\złej konfiguracji};
 \end{tikzpicture}
 \end{center}
 \begin{itemize}
