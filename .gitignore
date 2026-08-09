@@ -19,7 +19,3 @@ presentation/*.vrb
 presentation/*.fls
 presentation/*.fdb_latexmk
 presentation/*.synctex.gz
-
-# Reproducible presentation artifacts.
-presentation/*.pdf
-presentation/figures/*.png
